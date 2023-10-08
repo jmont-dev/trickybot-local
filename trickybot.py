@@ -1,6 +1,7 @@
 import discord
 import json
 import requests
+import os
 
 history=[]
 
@@ -15,6 +16,39 @@ trickybot:
 """
 
 context = []
+
+async def generate_to_message(message, prompt, system_prompt, context):
+    r = requests.post('http://localhost:11434/api/generate',
+                      json={
+                          'model': model,
+                          'system': system_prompt,
+                          'prompt': prompt,
+                          'context' : context
+                          
+                      },
+                      stream=True)
+    r.raise_for_status()
+
+    total_response=""
+
+    current_token=0
+
+    for line in r.iter_lines():
+        body = json.loads(line)
+        response_part = body.get('response', '')
+        total_response+=response_part
+        current_token+=1
+        if (current_token % 10)==0:
+            await message.edit(content=total_response)
+        # the response streams one token at a time, print that as we recieve it
+        print(response_part, end='', flush=True)
+
+        if 'error' in body:
+            raise Exception(body['error'])
+
+        if body.get('done', False):
+            await message.edit(content=total_response)
+            return total_response,body['context']
 
 def generate(prompt, system_prompt, context):
     r = requests.post('http://localhost:11434/api/generate',
@@ -65,13 +99,21 @@ async def on_message(message):
         history.append(user_message)
 
         global context
+
         async with message.channel.typing():
-            response,context = generate(user_message, system_prompt, context)
+            bot_message = await message.channel.send("Let me think about it!")
+            response,context = await generate_to_message(bot_message, user_message, system_prompt, context)
             print(f"Response of message was {response}")
             print(f"Context of message was {context}")
-            await message.channel.send(response)
 
-client.run('')
+#        async with message.channel.typing():
+#            response,context = generate(user_message, system_prompt, context)
+#            print(f"Response of message was {response}")
+#            print(f"Context of message was {context}")
+#            await message.channel.send(response)
+
+# Make sure to define your token externally using export trickytoken=
+client.run(os.getenv('trickytoken'))
 
 """
 class MyClient(discord.Client):
