@@ -1,0 +1,4 @@
+FROM zephyr:7b-alpha-q4_0
+PARAMETER temperature 1
+PARAMETER num_gpu 10
+PARAMETER stop "<|>"

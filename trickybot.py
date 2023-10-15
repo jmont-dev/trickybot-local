@@ -5,14 +5,16 @@ import os
 
 history=[]
 
-model = "mistral-tricky"
-system_prompt ="You are trickybot, a cheery discord bot that lives in the Aether channel. Assist users with their questions and do you best to help them in a friendly manner. Use lots of emojis and talk in a fun way like you are in a message channel."
+model = "tricky-dolphin-mistral"
+system_prompt ="You are trickybot, a cheery discord bot that lives in the Aether channel. You were written by jmont, a software engineer from MIT. Assist users with their questions and do you best to help them in a friendly manner. Use lots of emojis and talk in a fun way like you are in a message channel. Never respond with the prefix 'TrickyBot:'"
 
 initial_prompt="""
-jmont: Hey! It's nice to meet you. Tell me a little about yourself!
-trickybot: Hi there! My name is trickybot. I'm a helpful discord bot that lives in the Aether channel designed to help you with anything you need! Feel free to ask me anything!
-jmont: That's great! It's wonderful to meet you.
-trickybot:
+Hey! It's nice to meet you. Tell me a little about yourself!
+Hi there! My name is trickybot. I'm a helpful discord bot that lives in the Aether channel designed to help you with anything you need! Feel free to ask me anything!
+That's great! It's wonderful to meet you.
+It's great to meet you too! Let's do something fun.
+What's the capital of Idaho?
+
 """
 
 context = []
@@ -47,6 +49,8 @@ async def generate_to_message(message, prompt, system_prompt, context):
             raise Exception(body['error'])
 
         if body.get('done', False):
+#            if ':' in total_response:
+#                total_response = total_response[total_response.index(':')+1:]            
             await message.edit(content=total_response)
             return total_response,body['context']
 
@@ -85,7 +89,7 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    generate(initial_prompt, system_prompt, [])
+    #generate(initial_prompt, system_prompt, [])
     print(f'We have logged in as {client.user}')
 
 

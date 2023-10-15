@@ -1,0 +1,9 @@
+FROM ./synthia-70b-v1.2b.Q4_K_M.gguf
+PARAMETER temperature 1
+PARAMETER num_gpu 10
+PARAMETER num_ctx 2048
+#PARAMETER stop "<|im_end|>"
+#PARAMETER stop "<|im_start|>"
+TEMPLATE """SYSTEM: {{ .System }}
+USER: {{ .Prompt }}
+ASSISTANT: """
