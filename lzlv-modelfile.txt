@@ -1,0 +1,9 @@
+FROM ./lzlv_Q4_K_M.gguf
+PARAMETER temperature 1
+#PARAMETER num_gpu 10
+PARAMETER num_ctx 2048
+PARAMETER stop "USER:"
+PARAMETER stop "SYSTEM:"
+PARAMETER stop "SYSTEM"
+PARAMETER stop "You are trickybot"
+TEMPLATE """{{ .System }} USER: {{ .Prompt }} ASSISTANT: """

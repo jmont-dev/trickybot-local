@@ -1,5 +1,5 @@
-FROM ./synthia-70b-v1.2b.Q4_K_M.gguf
-PARAMETER temperature 1
+FROM ./SynthIA-70B-v1.5.q4_0.gguf
+#PARAMETER temperature 1
 #PARAMETER num_gpu 10
 PARAMETER num_ctx 2048
 PARAMETER stop "SYSTEM:"
