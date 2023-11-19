@@ -1,0 +1,12 @@
+FROM ./dolphin-2.2-70b.Q4_K_M.gguf
+#PARAMETER temperature 0.8
+PARAMETER num_gpu 83
+PARAMETER num_ctx 2048
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|im_start|>"
+TEMPLATE """<|im_start|>system
+{{ .System }}<|im_end|>
+<|im_start|>user
+{{ .Prompt }}<|im_end|>
+<|im_start|>assistant
+"""
