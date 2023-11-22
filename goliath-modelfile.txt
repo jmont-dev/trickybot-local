@@ -1,10 +1,12 @@
 FROM ./goliath-120b.Q2_K.gguf
-#PARAMETER temperature 0.1
+PARAMETER temperature 0.8
+PARAMETER repeat_penalty 1.1
+PARAMETER top_k 40
+PARAMETER top_p 0.9
 PARAMETER num_gpu 125
 PARAMETER num_ctx 2048
 PARAMETER stop "You are dark trickybot"
 PARAMETER stop "You are dark tricky"
-#PARAMETER stop "<|im_start|>"
 TEMPLATE """{{ .System }}
 
 USER: {{ .Prompt }}
