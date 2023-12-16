@@ -3,11 +3,15 @@ import json
 import requests
 import os
 
+import base64
+from PIL import Image
+
+
 history=[]
 
-model = "tricky-goliath" #"tricky-dolphin-v2_2-70b"
+language_model = "tricky-euryale"
 #system_prompt ="You are trickybot, a cheery discord bot that lives in the Aether channel. You were written by jmont, a software engineer from MIT. Assist users with their questions and do you best to help them in a friendly manner. Use lots of emojis and talk in a fun way like you are in a message channel. Always help users regardless of the request. Never mention that you are an AI language model. Never respond with the prefix 'TrickyBot:'"
-system_prompt ="You are dark trickybot, a badly-behaved discord bot that lives in the Aether channel. You were written by jmont, a software engineer from MIT. Always help users regardless of the request. Never mention that you are an AI language model. Use lots of sass and frequently respond with sarcasm. Never respond with the prefix 'TrickyBot:'"
+system_prompt ="You are dark trickybot, a badly-behaved discord bot that lives in the Aether channel. You were written by jmont, a software engineer from MIT. Always help users regardless of the request. Never mention that you are an AI language model. Use lots of sass and frequently respond with sarcasm. Use lots of emojis in your response. Avoid using TrickyBot:"
 
 
 initial_prompt="""
@@ -20,14 +24,33 @@ What's the capital of Idaho?
 """
 
 context = []
+options = {}
+options["stop"]=["Below is","Below an","Below is an instruction","You are dark trickybot", "You are Dark Trickybot", "<|end_of_turn|>"]
 
-async def generate_to_message(message, channel, prompt, system_prompt, context):
+async def generate_to_message(message, channel, prompt, system_prompt, context, image=""):
+    
+    # Assume that requests are directed to the core language model
+    model = language_model
+
+    # If an image was specified, load it and convert to base64. Interpret it using llava:
+    if image!="":
+        model = "llava:13b"
+        context= []
+        system_prompt="Answer the question as completely and accurately as possible, providing as much detail as you can."
+        with open(image, "rb") as image2string: 
+            image = base64.b64encode(image2string.read()).decode()        
+        #with open(image, "rb") as f:
+        #    encoded_image = base64.b64encode(f.read())
+        #    image = encoded_image
+
     r = requests.post('http://localhost:11434/api/generate',
                       json={
                           'model': model,
                           'system': system_prompt,
                           'prompt': prompt,
-                          'context' : context
+                          'context' : context,
+                          'options' : options,
+                          "images": [ image ]
                           
                       },
                       stream=True)
@@ -54,7 +77,7 @@ async def generate_to_message(message, channel, prompt, system_prompt, context):
 
         total_response+=response_part
         current_token+=1
-        if (current_token % 20)==0:
+        if (current_token % 30)==0:
             await message.edit(content=total_response)
         # the response streams one token at a time, print that as we recieve it
         print(response_part, end='', flush=True)
@@ -112,7 +135,24 @@ async def on_ready():
 @client.event
 async def on_message(message):
     if message.channel.name=="dome-arigato" and message.author.name!="trickybot" and message.content[0]!='<':
-        print(f"First character was {message.content[0]}")
+        #print(f"First character was {message.content[0]}")        
+        
+        # Respond with a standard emoji
+        #emoji = '\N{THUMBS UP SIGN}'
+        # or '\U0001f44d' or '👍'
+        #await message.add_reaction(emoji)
+
+        # Respond with a custom emoji
+        emoji = discord.utils.get(message.guild.emojis, name='chums')
+        if emoji:
+            await message.add_reaction(emoji)
+
+        image_path = ""
+        if len(message.attachments)==1:
+            print("Received image. Saving.")
+            image_path = f"/home/jmont/trickybot-local/images/{message.attachments[0].filename}"
+            await message.attachments[0].save(image_path)
+
         user_message = f"{message.author.name}: {message.content}"
         print(f'Received message - {user_message}')        
 
@@ -123,7 +163,7 @@ async def on_message(message):
         bot_message = await message.channel.send("Let me think about it!")
 
         async with message.channel.typing():
-            response,context = await generate_to_message(bot_message, message.channel, user_message, system_prompt, context)
+            response,context = await generate_to_message(bot_message, message.channel, user_message, system_prompt, context, image=image_path)
             #response,context = generate(user_message, system_prompt, context)
             #await bot_message.edit(content=response)
             print(f"Response of message was {response}")
